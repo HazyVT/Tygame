@@ -1,15 +1,11 @@
-export class Scene {
+import { Window } from "./Window";
 
-  changingScene: boolean;
-  timeToChange: number;
+export abstract class Scene {
 
-  constructor(timeToChange: number) {
-    this.changingScene = false;
-    this.timeToChange = timeToChange;
+  constructor() {
+    //
   }
 
-  update(dt: number) {
-    
-  }
-
+  abstract update(dt: number, window: Window): void;
+  
 }

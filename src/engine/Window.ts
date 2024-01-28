@@ -1,16 +1,25 @@
-import { GLFW_FALSE, GLFW_MAXIMIZED, GLFW_RESIZABLE, GLFW_TRUE, GLFW_VISIBLE, GLFWwindow, glfwCreateWindow, glfwDefaultWindowHints, glfwDestroyWindow, glfwGetVersionString, glfwInit, glfwMakeContextCurrent, glfwPollEvents, glfwSetCursorPosCallback, glfwSetErrorCallback, glfwSetKeyCallback, glfwSetMouseButtonCallback, glfwSetScrollCallback, glfwShowWindow, glfwSwapBuffers, glfwSwapInterval, glfwTerminate, glfwWindowHint, glfwWindowShouldClose } from "@minecraftts/glfw";
+import { GLFW_FALSE, GLFW_KEY_SPACE, GLFW_MAXIMIZED, GLFW_RESIZABLE, GLFW_TRUE, GLFW_VISIBLE, GLFWwindow, glfwCreateWindow, glfwDefaultWindowHints, glfwDestroyWindow, glfwGetVersionString, glfwInit, glfwMakeContextCurrent, glfwPollEvents, glfwSetCursorPosCallback, glfwSetErrorCallback, glfwSetKeyCallback, glfwSetMouseButtonCallback, glfwSetScrollCallback, glfwShowWindow, glfwSwapBuffers, glfwSwapInterval, glfwTerminate, glfwWindowHint, glfwWindowShouldClose } from "@minecraftts/glfw";
 import { GL_COLOR_BUFFER_BIT, glClear, glClearColor } from "@minecraftts/opengl";
 import { MouseListener } from "./listeners/MouseListener";
 import { KeyListener } from "./listeners/KeyListener";
 import { Time } from "./util/Time";
+import { Scene } from "./Scene";
+import { LevelEditorScene } from "./LevelEditorScene";
+import { LevelScene } from "./LevelScene";
 
 export class Window {
   private width: number;
   private height: number;
   private title: string;
 
-  private window: Window | null = null;
   private glfwWindow: GLFWwindow | null = null;
+
+  currentScene: Scene | null = null;
+  window: Window | null = null;
+
+  r: number = 0;
+  g: number = 0;
+  b: number = 0;
 
   constructor() {
     this.width = 640;
@@ -37,6 +46,23 @@ export class Window {
       glfwDestroyWindow(this.glfwWindow);
       
       glfwTerminate();
+    }
+
+    this.currentScene = new LevelEditorScene();
+  }
+
+  changeScene(sceneNo: number) {
+    switch(sceneNo) {
+      case 0:
+        this.currentScene = new LevelEditorScene();
+        //this.currentScene.init();
+        break;
+      case 1:
+        this.currentScene = new LevelScene();
+        //this.currentScene.init();
+        break;
+      default:
+        break;
     }
 
   }
@@ -85,17 +111,20 @@ export class Window {
   loop() {
     let beginTime = Time.getTime();
     let endTime = Time.getTime();
+    let dt = -1;
 
     while (this.glfwWindow != null && !glfwWindowShouldClose(this.glfwWindow)) {
       glfwPollEvents();
 
-      glClearColor(1, 1, 1, 0);
+      glClearColor(this.r, this.g, this.b, 1);
       glClear(GL_COLOR_BUFFER_BIT);
+
+      this.currentScene?.update(dt, this);
 
       glfwSwapBuffers(this.glfwWindow);
 
       endTime = Time.getTime();
-      let dt = endTime - beginTime;
+      dt = endTime - beginTime;
       beginTime = endTime;
     }
   }
