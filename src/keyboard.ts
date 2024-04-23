@@ -1,19 +1,4 @@
-import { ptr } from 'bun:ffi';
-import { SDL_EventTypes, SDL_InitFlags, SDL_Keys, SDL_WINDOWPOS_CENTERED, sdl } from "./SDL/sdl";
-
-
-class Window {
-    private window;
-    private renderer;
-
-    constructor(title: string, width: number, height: number) {
-        this.window = sdl.symbols.SDL_CreateWindow(Buffer.from(title + "\x00"), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
-        this.renderer = sdl.symbols.SDL_CreateRenderer(this.window, -1, 0);
-    }
-}
-
 class Keyboard {
-
     private static keyMap = new Map<number, boolean>();
     private static keyPressedMap = new Map<number, boolean>([
         [0 , false],
@@ -287,62 +272,4 @@ class Keyboard {
 
 }
 
-
-class Tygame {   
-    
-    private static running = true;
-    private static keyboard = Keyboard;
-    
-    private static window: Window | null = null;
-    private static escapeIsDefault = true;
-    
-
-    public static keys = SDL_Keys;
-    
-    static initWindow(title: string, width: number, height: number) {
-        const init = sdl.symbols.SDL_Init(SDL_InitFlags.SDL_INIT_VIDEO);
-        if (init != 0) {
-            throw new Error("SDL failed to initialize");
-        }
-
-        if (this.window == null) {
-            this.window = new Window(title, width, height);
-        }
-
-        return this.window;
-    }
-
-    static shouldClose() : boolean {
-        const event = new Uint32Array(32);
-        sdl.symbols.SDL_PollEvent(ptr(event));
-
-        switch (event[0]) {
-            case SDL_EventTypes.SDL_QUIT:
-                this.running = false;
-                break;
-            case SDL_EventTypes.SDL_KEYDOWN:
-            case SDL_EventTypes.SDL_KEYUP:
-                if (event[5] == this.keys.ESCAPE && this.escapeIsDefault) {
-                    this.running = false;
-                } else {
-                    this.keyboard.handleKey(event[5], event[3]);
-                }
-                break;
-        }
-        return !this.running;
-    }
-
-    static isKeyDown(key: number) {
-        return this.keyboard.isKeyDown(key);
-    }
-
-    static isKeyPressed(key: number) {
-        return this.keyboard.isKeyPressed(key);
-    }
-
-    static removeEscapeAsClose() {
-        this.escapeIsDefault = false;
-    }
-}
-
-export default Tygame;
+export default Keyboard;

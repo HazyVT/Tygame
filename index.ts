@@ -1,9 +1,9 @@
-import Tygame from "./src/tygame";
+import Slifer from "./src/slifer";
 
 console.log("Hello via Bun!");
 
-Tygame.initWindow("title", 640, 480);
+Slifer.initWindow("title", 640, 480);
 
-while (!Tygame.shouldClose()) {
-
+while (!Slifer.shouldClose()) {
+    
 }

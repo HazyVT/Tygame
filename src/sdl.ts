@@ -1,4 +1,4 @@
-import { dlopen } from 'bun:ffi';
+import { dlopen, suffix } from 'bun:ffi';
 
 export const SDL_InitFlags = {
     SDL_INIT_TIMER          : 0x00000001,
@@ -15,8 +15,8 @@ export const SDL_EventTypes = {
     SDL_QUIT                    : 0x100,
     SDL_KEYDOWN                 : 0x300,
     SDL_KEYUP                   : 0x301,
-    SDL_MOUSEMOTION             : 0x400, /**< Mouse moved */
-    SDL_MOUSEBUTTONDOWN         : 0x401,     /**< Mouse button pressed */
+    SDL_MOUSEMOTION             : 0x400,
+    SDL_MOUSEBUTTONDOWN         : 0x401,
     SDL_MOUSEBUTTONUP           : 0x402 
 }
 
@@ -259,9 +259,15 @@ export const SDL_Keys = {
     SLEEP : 1073742106
 }
 
+export const SDL_Buttons = {
+    SDL_BUTTON_LEFT     : 1,
+    SDL_BUTTON_MIDDLE   : 2,
+    SDL_BUTTON_RIGHT    : 3
+}
+
 export const SDL_WINDOWPOS_CENTERED = 0x2FFF0000;
 
-export const sdl = dlopen("lib/libSDL2.dylib", {
+export const sdl = dlopen(`lib/libSDL2.${suffix}`, {
     SDL_Init: {
         args: ['int'],
         returns: 'int'
