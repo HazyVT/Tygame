@@ -1,4 +1,5 @@
 import { SDL_WINDOWPOS_CENTERED, sdl } from "./sdl";
+import { Drawable } from "./utils";
 
 class Window {
     private window;

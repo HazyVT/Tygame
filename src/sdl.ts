@@ -290,5 +290,53 @@ export const sdl = dlopen(`lib/libSDL2.${suffix}`, {
     SDL_PollEvent: {
         args: ['pointer'],
         returns: 'int'
+    },
+    SDL_GetTicks: {
+        returns: 'int'
+    },
+    SDL_GetPlatform: {
+        returns: 'cstring'
+    },
+    SDL_RenderClear: {
+        args: ['pointer'],
+        returns: 'int'
+    },
+    SDL_RenderPresent: {
+        args: ['pointer'],
+        returns: 'void'
     }
 });
+
+export const image = dlopen(`lib/libSDL2_image.${suffix}`, {
+    IMG_Init: {
+        args: ['int'],
+        returns: 'int'
+    },
+    IMG_LoadTexture: {
+        args: ['pointer', 'cstring'],
+        returns: 'pointer'
+    }
+})
+
+export const slib = dlopen(`lib/libslifer.${suffix}`, {
+    CreateRect: {
+        args: ['int', 'int', 'int', 'int'],
+        returns: 'pointer'
+    },
+    SetRectXPosition: {
+        args: ['pointer', 'int'],
+        returns: 'void'
+    },
+    SetRectYPosition: {
+        args: ['pointer', 'int'],
+        returns: 'void'
+    },
+    SetRectWidth: {
+        args: ['pointer', 'int'],
+        returns: 'void'
+    },
+    SetRectHeight: {
+        args: ['pointer', 'int'],
+        returns: 'void'
+    }
+})

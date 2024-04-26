@@ -1,9 +1,11 @@
 import Slifer from "./src/slifer";
 
-console.log("Hello via Bun!");
+const window = Slifer.initWindow("Slifer", 640, 480);
 
-Slifer.initWindow("title", 640, 480);
+Slifer.loadImage("naked.png");
+
 
 while (!Slifer.shouldClose()) {
-    
+
 }
+

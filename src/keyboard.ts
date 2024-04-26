@@ -239,17 +239,20 @@ class Keyboard {
         [1073742106 , false]
     ]);
     
-    private static held = false;
-
-    public static handleKey(key: number, type: number) {
+    private static handleKey(key: number, type: number) {
         if (type == 1) {
             this.keyMap.set(key, true);
         } else if (type == 0) {
             this.keyMap.set(key, false);
-            this.held = false;
         }
     }
 
+    /**
+     * Method to check whether a key is currently held down
+     * 
+     * @param key The key to check - Obtainable from Slifer.keys
+     * @returns boolean
+     */
     public static isKeyDown(key: number) {
         const val = this.keyMap.get(key);
         if (val == true) {
@@ -259,6 +262,13 @@ class Keyboard {
         }
     }
 
+    /**
+     * Method to check if a key has been pressed. Will return true
+     * only once and never again until that key is released
+     * 
+     * @param key The key to check - Obtainable from Slifer.keys
+     * @returns boolean
+     */
     public static isKeyPressed(key: number) {
         const resp = this.isKeyDown(key);
         if (resp && this.keyPressedMap.get(key) == false) {

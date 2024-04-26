@@ -1,26 +1,60 @@
 import { ptr } from 'bun:ffi';
-import { SDL_Buttons, SDL_EventTypes, SDL_InitFlags, SDL_Keys, sdl } from "./sdl";
+import { SDL_Buttons, SDL_EventTypes, SDL_InitFlags, SDL_Keys, image, sdl } from "./sdl";
 import Keyboard from './keyboard';
 import Window from './window';
+import Mouse from './mouse';
+import { Drawable, Rectangle } from './utils';
 
 class Slifer {   
     
     private static running = true;
-    private static keyboard = Keyboard;
+
+    public static keyboard = Keyboard;
+    public static mouse = Mouse;
     
     private static window: Window | null = null;
+
     private static escapeIsDefault = true;
-    
+    private static printOnRun = true;
+    private static version = 0.1;
+
+    private static top = 0;
+    private static bottom = 0;
+    private static fps = 60;
 
     public static keys = SDL_Keys;
     public static buttons = SDL_Buttons;
     
+    /**
+     * Method to create the window
+     * 
+     * @param title The title of the window
+     * @param width The width of the window
+     * @param height The height of the window
+     * @returns A window object
+     */
     static initWindow(title: string, width: number, height: number) {
+        // Initialize SDL library
         const init = sdl.symbols.SDL_Init(SDL_InitFlags.SDL_INIT_VIDEO);
         if (init != 0) {
             throw new Error("SDL failed to initialize");
         }
 
+        // Initialize SDL Image library
+        const img_init = image.symbols.IMG_Init(3);
+        if (img_init == 0) {
+            throw new Error("SDL_Image failed to initialize");
+        }
+
+        if (this.printOnRun) {
+            console.log(`Slifer ver ${this.version} has initialized successfully`)
+            console.log(sdl.symbols.SDL_GetPlatform());
+        }
+
+        /*
+        Check if window has been created
+        Follows singleton data pattern
+        */
         if (this.window == null) {
             this.window = new Window(title, width, height);
         }
@@ -28,40 +62,108 @@ class Slifer {
         return this.window;
     }
 
+    /**
+     * Method to check whether slifer should keep running
+     * 
+     * @returns boolean
+     */
     static shouldClose() : boolean {
-        const event = new Uint32Array(32);
-        sdl.symbols.SDL_PollEvent(ptr(event));
+        
+        // Gets the tick at top of window
+        this.top = sdl.symbols.SDL_GetTicks();
+        // Creates delta time
+        const delta = this.top - this.bottom;
 
-        switch (event[0]) {
-            case SDL_EventTypes.SDL_QUIT:
-                this.running = false;
-                break;
-            case SDL_EventTypes.SDL_KEYDOWN:
-            case SDL_EventTypes.SDL_KEYUP:
-                if (event[5] == this.keys.ESCAPE && this.escapeIsDefault) {
-                    this.running = false;
-                } else {
-                    this.keyboard.handleKey(event[5], event[3]);
-                }
-                break;
-            case SDL_EventTypes.SDL_MOUSEBUTTONDOWN:
-            case SDL_EventTypes.SDL_MOUSEBUTTONUP:
-                console.log(event);
-                break;
+        if (delta > (1000 / this.fps)) {
+            sdl.symbols.SDL_RenderClear((this.window as any).renderer);
+            
+            // Creates new event array
+            const event = new Int16Array(32);
+            if (sdl.symbols.SDL_PollEvent(ptr(event))) {
+                switch (event[0]) {
+                    case SDL_EventTypes.SDL_QUIT:
+                        this.running = false;
+                        break;
+                    case SDL_EventTypes.SDL_KEYDOWN:
+                    case SDL_EventTypes.SDL_KEYUP:
+                        if (event[10] == this.keys.ESCAPE && this.escapeIsDefault) {
+                            this.running = false;
+                        } else {
+                            (this.keyboard as any).handleKey(event[10], event[6]);
+                        }
+                        break;
+                    case SDL_EventTypes.SDL_MOUSEBUTTONDOWN:
+                        (this.mouse as any).handleMouseDown(event[8]);
+                        break;
+                    case SDL_EventTypes.SDL_MOUSEBUTTONUP:
+                        (this.mouse as any).handleMouseUp(event[8]);
+                        break;
+                }                
+
+                // Renders the renderer to the screen
+                sdl.symbols.SDL_RenderPresent((this.window as any).renderer);
+
+            };
+
+            // Sets ending tick to start tick
+            this.bottom = this.top;
+
+
         }
+        // Returns whether the window is running or not
         return !this.running;
     }
-
-    static isKeyDown(key: number) {
-        return this.keyboard.isKeyDown(key);
-    }
-
-    static isKeyPressed(key: number) {
-        return this.keyboard.isKeyPressed(key);
-    }
-
+    
+    /**
+     * This method removes escape as the default close button
+     */
     static removeEscapeAsClose() {
         this.escapeIsDefault = false;
+    }
+
+    /**
+     * Method to return the fps of the window
+     * 
+     * @returns fps
+     */
+    static getFPS() {
+        return this.fps;
+    } 
+
+    /**
+     * Method to ser the fps of the window
+     * 
+     * @param fps The wanted FPS of the window
+     */
+    static setFPS(fps: number) {
+        this.fps = fps;
+    }
+
+    /**
+     * Method to set whether Slifer should print its default console logs.
+     * Set to true on default
+     * 
+     * @param flag
+     */
+    static setPrintOnRun(flag: boolean) {
+        this.printOnRun = flag;
+    }
+
+    /**
+     * Method to load an image
+     * 
+     * @param path Path to image
+     * @returns Drawable object
+     */
+    static loadImage(path: string) {
+        if (this.window == null) {
+            throw new Error("Window has not been initialized");
+        }
+        return new Drawable((this.window as any).renderer, path);
+    }
+
+    static draw(drawable: Drawable, src: Rectangle, dest: Rectangle, angle: number, flip: number) {
+        
     }
 }
 
