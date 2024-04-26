@@ -11,6 +11,8 @@ class Slifer {
 
     public static keyboard = Keyboard;
     public static mouse = Mouse;
+
+    public static Rectangle = Rectangle;
     
     private static window: Window | null = null;
 
@@ -39,6 +41,14 @@ class Slifer {
         if (init != 0) {
             throw new Error("SDL failed to initialize");
         }
+
+        // Set Hints
+        const rscalehint = sdl.symbols.SDL_SetHint(Buffer.from("SDL_HINT_RENDER_SCALE_QUALITY"), Buffer.from("nearest"));
+
+        if (rscalehint != true) {
+            throw new Error("SDL hints failed to initialize");
+        }
+        
 
         // Initialize SDL Image library
         const img_init = image.symbols.IMG_Init(3);
@@ -74,8 +84,9 @@ class Slifer {
         // Creates delta time
         const delta = this.top - this.bottom;
 
-        if (delta > (1000 / this.fps)) {
+        if (delta > (1000 / this.fps)) {            
             sdl.symbols.SDL_RenderClear((this.window as any).renderer);
+
             
             // Creates new event array
             const event = new Int16Array(32);
@@ -98,12 +109,11 @@ class Slifer {
                     case SDL_EventTypes.SDL_MOUSEBUTTONUP:
                         (this.mouse as any).handleMouseUp(event[8]);
                         break;
-                }                
-
-                // Renders the renderer to the screen
-                sdl.symbols.SDL_RenderPresent((this.window as any).renderer);
-
+                }             
             };
+
+            sdl.symbols.SDL_RenderPresent((this.window as any).renderer);
+            
 
             // Sets ending tick to start tick
             this.bottom = this.top;
@@ -162,8 +172,37 @@ class Slifer {
         return new Drawable((this.window as any).renderer, path);
     }
 
-    static draw(drawable: Drawable, src: Rectangle, dest: Rectangle, angle: number, flip: number) {
-        
+    static draw(drawable: Drawable, src: Rectangle, dest: Rectangle, rotation?: number, flipH?: boolean, flipV?: boolean) {
+        const _rotation = rotation || 0;
+
+        let _flip = 0;
+        if (flipH && flipV) {
+            _flip = 3;
+        } else if (flipH) {
+            _flip = 1;
+        } else if (flipV) {
+            _flip = 2;
+        } else {
+            _flip = 0;
+        }
+
+        const i = sdl.symbols.SDL_RenderCopyEx(
+            (this.window as any).renderer,
+            (drawable as any).pointer,
+            (src as any).pointer,
+            (dest as any).pointer,
+            _rotation,
+            null,
+            _flip
+        )
+
+        if (i != 0) {
+            throw new Error("Image failed to be drawn");
+        }
+    }
+
+    static flip() : void {
+        // Renders the renderer to the screen
     }
 }
 

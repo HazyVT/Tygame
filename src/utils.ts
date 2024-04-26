@@ -1,4 +1,4 @@
-import type { Pointer } from "bun:ffi";
+import {type Pointer} from "bun:ffi";
 import { image, slib } from "./sdl";
 import Slifer from "./slifer";
 

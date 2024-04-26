@@ -304,6 +304,25 @@ export const sdl = dlopen(`lib/libSDL2.${suffix}`, {
     SDL_RenderPresent: {
         args: ['pointer'],
         returns: 'void'
+    },
+    SDL_RenderCopyEx: {
+        args: [
+            'pointer',
+            'pointer',
+            'pointer',
+            'pointer',
+            'double',
+            'pointer',
+            'int'
+        ],
+        returns: 'int'
+    },
+    SDL_GetError: {
+        returns: 'cstring'
+    },
+    SDL_SetHint: {
+        args: ['cstring', 'cstring'],
+        returns: 'bool'
     }
 });
 
