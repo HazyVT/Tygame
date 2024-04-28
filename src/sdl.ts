@@ -357,5 +357,27 @@ export const slib = dlopen(`lib/libslifer.${suffix}`, {
     SetRectHeight: {
         args: ['pointer', 'int'],
         returns: 'void'
+    },
+    CreateManager: {
+        returns: 'pointer'
+    }
+})
+
+export const gfx = dlopen(`lib/libSDL2_gfx.${suffix}`, {
+    SDL_initFramerate: {
+        args: ['pointer'],
+        returns: 'void'
+    },
+    SDL_setFramerate: {
+        args: ['pointer', 'int'],
+        returns: 'int'
+    },
+    SDL_framerateDelay: {
+        args :['pointer'],
+        returns: 'int'
+    },
+    SDL_getFramerate: {
+        args: ['pointer'],
+        returns: 'int'
     }
 })

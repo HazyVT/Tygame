@@ -1,9 +1,9 @@
-import { ptr } from 'bun:ffi';
-import { SDL_Buttons, SDL_EventTypes, SDL_InitFlags, SDL_Keys, image, sdl } from "./sdl";
+import { ptr, type Pointer } from 'bun:ffi';
+import { SDL_Buttons, SDL_EventTypes, SDL_InitFlags, SDL_Keys, gfx, image, sdl, slib } from "./sdl";
 import Keyboard from './keyboard';
 import Window from './window';
 import Mouse from './mouse';
-import { Drawable, Rectangle } from './utils';
+import { Drawable, Rectangle, log } from './utils';
 
 class Slifer {   
     
@@ -19,6 +19,7 @@ class Slifer {
     private static escapeIsDefault = true;
     private static printOnRun = true;
     private static version = 0.1;
+    private static manager: Pointer | null = null;
 
     private static top = 0;
     private static bottom = 0;
@@ -42,6 +43,11 @@ class Slifer {
             throw new Error("SDL failed to initialize");
         }
 
+        if (this.printOnRun) {
+            log.green(`Slifer ver ${this.version} has initialized successfully`)
+            log.green(sdl.symbols.SDL_GetPlatform().toString());
+        }
+
         // Set Hints
         const rscalehint = sdl.symbols.SDL_SetHint(Buffer.from("SDL_HINT_RENDER_SCALE_QUALITY"), Buffer.from("nearest"));
 
@@ -56,9 +62,20 @@ class Slifer {
             throw new Error("SDL_Image failed to initialize");
         }
 
+        // Initialize Framerate Manager
+        this.manager = slib.symbols.CreateManager();
+        gfx.symbols.SDL_initFramerate(this.manager);
+
         if (this.printOnRun) {
-            console.log(`Slifer ver ${this.version} has initialized successfully`)
-            console.log(sdl.symbols.SDL_GetPlatform());
+            log.green("FPS Manager has been initialized successfully.");
+        }
+
+
+        // Set framerate to 60
+        gfx.symbols.SDL_setFramerate(this.manager, 60);
+
+        if (this.printOnRun) {
+            log.green("FPS has been set to 60 by default.")
         }
 
         /*
@@ -78,48 +95,38 @@ class Slifer {
      * @returns boolean
      */
     static shouldClose() : boolean {
+        const dl = gfx.symbols.SDL_framerateDelay(this.manager);
         
-        // Gets the tick at top of window
-        this.top = sdl.symbols.SDL_GetTicks();
-        // Creates delta time
-        const delta = this.top - this.bottom;
-
-        if (delta > (1000 / this.fps)) {            
-            sdl.symbols.SDL_RenderClear((this.window as any).renderer);
-
-            
-            // Creates new event array
-            const event = new Int16Array(32);
-            if (sdl.symbols.SDL_PollEvent(ptr(event))) {
-                switch (event[0]) {
-                    case SDL_EventTypes.SDL_QUIT:
+        sdl.symbols.SDL_RenderClear((this.window as any).renderer);            
+        // Creates new event array
+        const event = new Int16Array(32);
+        if (sdl.symbols.SDL_PollEvent(ptr(event))) {
+            switch (event[0]) {
+                case SDL_EventTypes.SDL_QUIT:
+                    this.running = false;
+                    break;
+                case SDL_EventTypes.SDL_KEYDOWN:
+                case SDL_EventTypes.SDL_KEYUP:
+                    if (event[10] == this.keys.ESCAPE && this.escapeIsDefault) {
                         this.running = false;
-                        break;
-                    case SDL_EventTypes.SDL_KEYDOWN:
-                    case SDL_EventTypes.SDL_KEYUP:
-                        if (event[10] == this.keys.ESCAPE && this.escapeIsDefault) {
-                            this.running = false;
-                        } else {
-                            (this.keyboard as any).handleKey(event[10], event[6]);
-                        }
-                        break;
-                    case SDL_EventTypes.SDL_MOUSEBUTTONDOWN:
-                        (this.mouse as any).handleMouseDown(event[8]);
-                        break;
-                    case SDL_EventTypes.SDL_MOUSEBUTTONUP:
-                        (this.mouse as any).handleMouseUp(event[8]);
-                        break;
-                }             
-            };
+                    } else {
+                        (this.keyboard as any).handleKey(event[10], event[6]);
+                    }
+                    break;
+                case SDL_EventTypes.SDL_MOUSEBUTTONDOWN:
+                    (this.mouse as any).handleMouseDown(event[8]);
+                    break;
+                case SDL_EventTypes.SDL_MOUSEBUTTONUP:
+                    (this.mouse as any).handleMouseUp(event[8]);
+                    break;
+            }             
+        };
 
-            sdl.symbols.SDL_RenderPresent((this.window as any).renderer);
             
 
-            // Sets ending tick to start tick
-            this.bottom = this.top;
-
-
-        }
+        
+        // Sets ending tick to start tick
+        this.bottom = this.top;
         // Returns whether the window is running or not
         return !this.running;
     }
@@ -137,7 +144,7 @@ class Slifer {
      * @returns fps
      */
     static getFPS() {
-        return this.fps;
+        return gfx.symbols.SDL_getFramerate(this.manager);
     } 
 
     /**
@@ -203,6 +210,7 @@ class Slifer {
 
     static flip() : void {
         // Renders the renderer to the screen
+        sdl.symbols.SDL_RenderPresent((this.window as any).renderer);
     }
 }
 

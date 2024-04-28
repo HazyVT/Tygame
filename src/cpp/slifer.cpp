@@ -5,9 +5,22 @@ typedef struct Rect {
     int w, h;
 } Rect;
 
+typedef struct FPSManager {
+    int framerate;
+    float rateticks;
+    int baseticks;
+    int lastticks;
+    int rate;
+} FPSManager;
+
 extern "C" Rect* CreateRect(int x, int y, int width, int height) {
     Rect* ptr = (Rect*)malloc(sizeof(Rect));
     *ptr = Rect{x,y,width,height};
+    return ptr;
+}
+
+extern "C" FPSManager* CreateManager() {
+    FPSManager* ptr = (FPSManager*)malloc(sizeof(FPSManager));
     return ptr;
 }
 
